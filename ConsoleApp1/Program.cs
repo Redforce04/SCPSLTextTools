@@ -5,6 +5,7 @@
         public static StartupArgs StartupProject = StartupArgs.ProjectVision;
         private static bool _startGordon = true;
         private static bool _startVision = true;
+        private static bool _startMiro = true;
         private static bool _startGrandPuppeteer = true;
 
         public static void Main(string[] args)
@@ -41,6 +42,12 @@
             {
                 ProjectGrandPuppeteer.API.Enable();
                 Log.Info($"Started Grand Puppeteer");
+            }
+
+            if (_startMiro)
+            {
+                ProjectMiro.API.Enable();
+                Log.Info($"Started Miro");
             }
             ServerConsole.ConsoleCommandHandler();
 
