@@ -27,17 +27,16 @@ namespace ProjectMiro.Framework
         /// The type of object that is returned. In this case, type returns board_member.
         /// </summary>
         public ModelType type { get; private set; }
+
+        public enum BoardMemberActions
+        {
+            ShareBoard,
+            GetAllBoardMembers,
+            GetSpecificBoardMember,
+            UpdateBoardMember,
+            RemoveBoardMember
+        }
     }
 
-    /// <summary>
-    /// Role of the user on the board.
-    /// </summary>
-    public enum Role
-    {
-        viewer,
-        commenter,
-        editor,
-        owner,
-        coowner
-    }
+
 }

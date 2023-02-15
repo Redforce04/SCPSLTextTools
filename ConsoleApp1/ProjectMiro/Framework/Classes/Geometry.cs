@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1.ProjectMiro.Framework
+namespace ProjectMiro.Framework
 {
     /// <summary>
     /// The geometry object contains geometrical information about the item, such as dimensions and rotation.

@@ -14,7 +14,7 @@ namespace ProjectMiro.Framework
         /// <summary>
         /// Defines the public-level access to the board.
         /// </summary>
-        public Access access { get; private set; } = Access._private;
+        public AccessEnum.Access access { get; private set; } = AccessEnum.Access._private;
         /// <summary>
         /// Defines the user role when inviting a user via the invite to team and board link. For Enterprise users, the inviteToAccountAndBoardLinkAccess parameter is always set to no_access regardless of the value that you assign for this parameter.
         /// </summary>

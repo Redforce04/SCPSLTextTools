@@ -1,4 +1,6 @@
-﻿namespace ConsoleApp1
+﻿using Exiled.Events.EventArgs;
+using ProjectMiro;
+namespace ConsoleApp1
 {
     public class Program
     {

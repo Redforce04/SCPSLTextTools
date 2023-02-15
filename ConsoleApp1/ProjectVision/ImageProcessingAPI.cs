@@ -34,14 +34,21 @@ namespace ProjectVision
     {
         public static async Task<Image> OverlayImage(Image Background, Image Foreground, SixLabors.ImageSharp.Point ForegroundPoint)
         {
-            List<string> disposables = new List<string>();
             Image Composite = new Image<Rgba32>(Background.Width, Background.Height);
             Composite.Mutate(o => o
                     .DrawImage(Background, new SixLabors.ImageSharp.Point(0, 0), 1f)
                     .DrawImage(Foreground, ForegroundPoint, 1f)
                 );
                 return Composite;
-            }
+        }
+
+        public static async Task<Image> OverlayPath(Image Background, SixLabors.ImageSharp.Point Point, Color color, IPathCollection paths, float thickness = 3f)
+        {
+            Image Composite = new Image<Rgba32>(Background.Width, Background.Height);
+            Composite.Mutate(o => o
+                .Draw(new DrawingOptions(){}, new Pen(color,thickness){}, paths) );
+            return Composite;
+        }
         public static async Task<Image> OverlayText(Image image, string text, float x, float y, int size, Color forecolor, Nullable<Color> backcolor, FontStyle style = FontStyle.Regular, BrushType brushtype = BrushType.Fill, HorizontalAlignment alignment = HorizontalAlignment.Left, string fontname = "8514oemr.ttf")
         {
             Image newImage = new Image<Rgba32>(image.Width, image.Height);

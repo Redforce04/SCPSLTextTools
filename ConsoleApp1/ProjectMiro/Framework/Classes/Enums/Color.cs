@@ -21,7 +21,12 @@ namespace ProjectMiro.Framework
             { color.dark_blue, "414bb2" },
             { color.yellow, "fac710" },
             { color.gray, "808080" },
-            { color.black, "1a1a1a" }
+            { color.black, "1a1a1a" },
+            { color.light_yellow, "fff9b1" },
+            { color.orange, "ff9d48" },
+            { color.light_pink, "ffcee0" },
+            { color.pink, "ea94bb" },
+            { color.light_blue, "a6ccf5" }
         };
 
         public static string GetColorHex(color color) => colorValues[color];
@@ -38,7 +43,13 @@ namespace ProjectMiro.Framework
             dark_blue,
             yellow,
             gray,
-            black
+            black,
+
+            light_yellow,
+            orange,
+            light_pink,
+            pink,
+            light_blue
         }
     }
 }

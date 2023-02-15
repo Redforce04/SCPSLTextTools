@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace ProjectMiro.Framework
 {
-    public enum ModelType
+    public enum BorderStyle
     {
-        user,
-        team,
-        board_member
+        dotted,
+        dashed,
+        normal
     }
 }

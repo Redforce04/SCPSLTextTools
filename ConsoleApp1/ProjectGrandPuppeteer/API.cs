@@ -1,11 +1,20 @@
-﻿using System;
+﻿using System.Collections.ObjectModel;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleApp1;
 using Rug.Osc;
+using LibUsbDotNet;
+using LibUsbDotNet.Descriptors;
+using LibUsbDotNet.Info;
+using LibUsbDotNet.LibUsb;
+using LibUsbDotNet.Main;
+using Newtonsoft.Json;
+
 
 namespace ProjectGrandPuppeteer
 {
@@ -18,10 +27,13 @@ namespace ProjectGrandPuppeteer
             Api = new API();
         }
 
+        internal ArduinoHandler ArduinoHandler { get; set; }
         internal OSCHandler handler;
         public API()
         {
             handler = new OSCHandler(8001, 8000, new IPAddress(new byte[4] { 192, 168, 1, 2 }));
+            ArduinoHandler = new ArduinoHandler();
+            
         }
 
         public void SendOSC(string info, string args)
@@ -30,6 +42,199 @@ namespace ProjectGrandPuppeteer
         }
     }
 
+    public class ArduinoHandler
+    {
+        public ArduinoHandler()
+        {
+            StartHandler();
+        }
+
+        public void StartHandler()
+        {
+            // Port_#0008.Hub_#0001   
+            // address 00000008
+            // Vid 0403   "1027"
+            // Pid 6014   "24596"
+            // Rev 0900   "900"
+            // Device Id "USB\VID_0403&PID_6014\6&258DE23&0&8"
+            // Device GUID "{5ebc5238-fdee-4447-ba74-b056853fc0b0}"
+            // Device Path "\\?\usb#vid_0403&pid_6014#6&258de23&0&8#{5ebc5238-fdee-4447-ba74-b056853fc0b0}"
+            // Symbolic Name "\\?\usb#vid_0403&pid_6014#6&258de23&0&8#{5ebc5238-fdee-4447-ba74-b056853fc0b0}"
+            // Device Full Name "Future Technology Devices International, Ltd - USB Serial Converter"
+            // Device Name "USB Serial Converter"
+
+            //LibUsbDotNet.Device;
+            //LibUsbDotNet.Context;
+            //LibUsbDotNet.DeviceHandle;
+            //LibUsbDotNet.Main.UsbDeviceFinder;
+            //Device device = new Device();
+            //Context context = new Context();
+            //DeviceHandle handle = new DeviceHandle();
+            int vid = 0403;
+            int pid = 6014;
+            int rev = 0900;
+            int port = 0008;
+            int hub = 0001;
+            string classGuid = "{ecfb0cfd-74c4-4f52-bbf7-343461cd72ac}";
+            //UsbDeviceFinder usbDeviceFinder = new UsbDeviceFinder(vid, pid, rev);
+            //search();
+            //if (MyUsbDevice == null)
+            //    searchMethodTwo();
+            //if(MyUsbDevice is null)
+            //    return;
+            //MyUsbDevice.
+
+            Thread thread = new Thread(processOutput);
+            thread.Start();
+            //processOutput();
+
+            Log.Debug($"output test started");
+
+        }
+
+        public UsbDevice MyUsbDevice;
+        public UsbRegistry registry;
+
+        public void processOutput()
+        {
+            Log.Debug($"Started Test Loop");
+            int vid = 1027;
+            int pid = 24596;
+            int rev = 0900;
+            UsbRegistry Device = null;
+            UsbDeviceFinder finder = new UsbDeviceFinder(vid, pid, rev);
+
+            UsbDevice MyUsbDevice = UsbDevice.OpenUsbDevice(finder);
+            ErrorCode ec = ErrorCode.None;
+            try
+            {
+                // Find and open the usb device.
+                //MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
+
+                // If the device is open and ready
+                if (MyUsbDevice == null) throw new Exception("Device Not Found.");
+
+                // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
+                // it exposes an IUsbDevice interface. If not (WinUSB) the 
+                // 'wholeUsbDevice' variable will be null indicating this is 
+                // an interface of a device; it does not require or support 
+                // configuration and interface selection.
+                IUsbDevice wholeUsbDevice = MyUsbDevice as IUsbDevice;
+                if (!ReferenceEquals(wholeUsbDevice, null))
+                {
+                    // This is a "whole" USB device. Before it can be used, 
+                    // the desired configuration and interface must be selected.
+
+                    // Select config #1
+                    wholeUsbDevice.SetConfiguration(1);
+
+                    // Claim interface #0.
+                    wholeUsbDevice.ClaimInterface(0);
+                }
+
+                // open read endpoint 1.
+                UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep01);
+
+
+                byte[] readBuffer = new byte[1024];
+                while (ec == ErrorCode.None)
+                {
+                    int bytesRead;
+
+                    // If the device hasn't sent data in the last 5 seconds,
+                    // a timeout error (ec = IoTimedOut) will occur. 
+
+                    ec = reader.Read(readBuffer, 5000, out bytesRead);
+
+                    if (bytesRead == 0) throw new Exception(string.Format("{0}:No more bytes!", ec));
+                    Log.Debug($"{bytesRead} bytes read: \"{Encoding.Default.GetString(readBuffer, 0, bytesRead)}\"");
+                    Thread.Sleep(50);
+                }
+
+                Console.WriteLine("\r\nDone!\r\n");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine((ec != ErrorCode.None ? ec + ":" : String.Empty) + ex.Message);
+            }
+            finally
+            {
+                if (MyUsbDevice != null)
+                {
+                    if (MyUsbDevice.IsOpen)
+                    {
+                        // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
+                        // it exposes an IUsbDevice interface. If not (WinUSB) the 
+                        // 'wholeUsbDevice' variable will be null indicating this is 
+                        // an interface of a device; it does not require or support 
+                        // configuration and interface selection.
+                        IUsbDevice wholeUsbDevice = MyUsbDevice as IUsbDevice;
+                        if (!ReferenceEquals(wholeUsbDevice, null))
+                        {
+                            // Release interface #0.
+                            wholeUsbDevice.ReleaseInterface(0);
+                        }
+
+                        MyUsbDevice.Close();
+                    }
+
+                    MyUsbDevice = null;
+
+                    // Free usb resources
+                    UsbDevice.Exit();
+
+                }
+
+                // Wait for user input..
+                Log.Debug($"Thread Ended because no more output was detected");
+            }
+
+        }
+
+        private void searchMethodTwo()
+        {
+            int vid = 1027;
+            int pid = 24596;
+            int rev = 0900;
+            UsbRegistry Device = null;
+            UsbDeviceFinder finder = new UsbDeviceFinder(vid, pid, rev);
+            foreach (UsbRegistry device in UsbDevice.AllDevices)
+            {
+                if (finder.Check(device))
+                { 
+                    string json = JsonConvert.SerializeObject(device);
+                    //Log.Debug($"USB Device Found. Device: \n{json}");
+                    Device = device;
+                    break;
+                }
+            }
+
+            if (Device == null)
+                return;
+            registry = Device;
+            if(Device.Device == null)
+                Log.Error($"Device is null.");
+
+        }
+
+        private void search()
+        {
+            var allDevices = UsbDevice.AllDevices;
+            foreach (UsbRegistry usbRegistry in allDevices)
+            {
+                if (usbRegistry.Open(out MyUsbDevice))
+                {
+                    break;
+                }
+            }
+
+
+            // Free usb resources.
+            // This is necessary for libusb-1.0 and Linux compatibility.
+            UsbDevice.Exit();
+        }
+    }
     public class OSCHandler
     {
         public OSCHandler(int listenPort, int sendPort, IPAddress address)
@@ -79,7 +284,7 @@ namespace ProjectGrandPuppeteer
                 outp += x.ToString();
             }
             Log.Debug($"Message: {outp}");
-            Log.Debug($"Message: {message.ToString()}");
+            //Log.Debug($"Message: {message.tost}");
         }
         internal void sendOSC(string path, string args)
         {

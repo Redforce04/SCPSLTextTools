@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 namespace ProjectMiro.Framework
 {
     /// <summary>
-    /// Defines the public-level access to the board.
+    /// Role of the user on the board.
     /// </summary>
-    public enum Access
+    public enum Role
     {
-        _private,
-        view,
-        comment,
-        edit
+        viewer,
+        commenter,
+        editor,
+        owner,
+        coowner
     }
 }
